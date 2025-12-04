@@ -107,7 +107,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    '© 2025 UPGRIS',
+                    '© 2025 UPGIS',
                     style: TextStyle(color: Colors.white54),
                   ),
                 ],
