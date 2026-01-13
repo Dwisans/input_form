@@ -2,7 +2,7 @@ name: input_form
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -35,6 +35,16 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.3
+  salomon_bottom_bar: ^3.3.2
+  intl: ^0.20.2
+  uuid: ^4.5.0
+  provider: ^6.0.5 # Untuk manajemen status Login
+  google_nav_bar: ^5.0.6 # Navbar modern pilihan Anda
+  url_launcher: ^6.1.14 # Untuk buka WA dan Link Browser
+  flutter_linkify: ^6.0.0 # Mendeteksi link teks otomatis
+  font_awesome_flutter: ^10.7.0 # Ikon FontAwesome
+  image_picker: ^1.0.7 # Untuk memilih gambar dari galeri atau kamera
+  path_provider: ^2.1.2 # Untuk mendapatkan path direktori aplikasi
 
 dev_dependencies:
   flutter_test:
@@ -45,14 +55,13 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
