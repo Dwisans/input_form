@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../../main.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../repositories/task_repository.dart';
@@ -33,41 +35,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  // Fungsi Ambil Gambar dari Galeri & Simpan ke AuthProvider
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50, // Kompres gambar agar tidak berat saat disimpan
-    );
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50,
+      );
 
-    if (image != null) {
-      // Panggil fungsi updateProfilePic dari AuthProvider Anda
-      // Kita simpan path filenya
-      Provider.of<AuthProvider>(context, listen: false)
-          .updateProfilePic(image.path);
+      if (image != null) {
+        if (mounted) {
+          Provider.of<AuthProvider>(
+            context,
+            listen: false,
+          ).updateProfilePic(image.path);
+        }
+      }
+    } on PlatformException catch (e) {
+      // Menangani error channel image_picker
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Error: Pastikan aplikasi sudah direstart (bukan hot reload)",
+            ),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Mengambil data sesuai dengan getter di AuthProvider Anda
     final auth = Provider.of<AuthProvider>(context);
-    
+
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             const SizedBox(height: 40),
-            // HEADER: Profil & Ganti Foto
             Center(
               child: Stack(
                 children: [
                   CircleAvatar(
                     radius: 60,
                     backgroundColor: Colors.teal.withOpacity(0.1),
-                    // Logika tampilan: Cek apakah path itu file lokal atau URL internet
                     backgroundImage: auth.profilePic.startsWith('http')
                         ? NetworkImage(auth.profilePic) as ImageProvider
                         : FileImage(File(auth.profilePic)),
@@ -84,7 +97,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -93,41 +110,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 15),
             Text(
-              auth.username, // Menggunakan getter 'username'
+              auth.username,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const Text(
-              "Dwiky Personal Account", // Placeholder karena email tidak ada di AuthProvider
+              "Dwiky Personal Account",
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 30),
-
-            // SECTION: Statistik
             Row(
               children: [
-                _buildStatCard("Total Tugas", _totalTasks.toString(), Colors.blue),
+                _buildStatCard(
+                  "Total Tugas",
+                  _totalTasks.toString(),
+                  Colors.blue,
+                ),
                 const SizedBox(width: 15),
-                _buildStatCard("Selesai", _completedTasks.toString(), Colors.green),
+                _buildStatCard(
+                  "Selesai",
+                  _completedTasks.toString(),
+                  Colors.green,
+                ),
               ],
             ),
-            
             const SizedBox(height: 30),
-
-            // SECTION: Menu Pengaturan
             _buildMenuTile(Icons.notifications_none, "Notifikasi", () {}),
             _buildMenuTile(Icons.lock_outline, "Keamanan", () {}),
             _buildMenuTile(Icons.info_outline, "Tentang Aplikasi", () {}),
             const Divider(height: 40),
             _buildMenuTile(
-              Icons.logout, 
-              "Keluar", 
-              () => auth.logout(), 
-              color: Colors.red
+              Icons.logout,
+              "Keluar",
+              () => _handleLogout(context, auth),
+              color: Colors.red,
             ),
           ],
         ),
       ),
     );
+  }
+
+  // FUNGSI LOGOUT DENGAN NAVIGASI
+  void _handleLogout(BuildContext context, AuthProvider auth) async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Apakah Anda yakin ingin keluar?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Batal"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Keluar", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await auth.logout();
+
+      // GUNAKAN NAVIGASI GLOBAL
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
+    }
   }
 
   Widget _buildStatCard(String title, String value, Color color) {
@@ -142,16 +195,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
             const SizedBox(height: 5),
-            Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuTile(IconData icon, String title, VoidCallback onTap, {Color color = Colors.black87}) {
+  Widget _buildMenuTile(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    Color color = Colors.black87,
+  }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
@@ -162,7 +230,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: Icon(icon, color: color, size: 22),
       ),
-      title: Text(title, style: TextStyle(color: color, fontWeight: FontWeight.w500)),
+      title: Text(
+        title,
+        style: TextStyle(color: color, fontWeight: FontWeight.w500),
+      ),
       trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
       onTap: onTap,
     );

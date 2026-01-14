@@ -36,9 +36,18 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _dueDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
+      // Menyesuaikan tema kalender agar Teal
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: Colors.teal),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) setState(() => _dueDate = picked);
   }
@@ -57,43 +66,95 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
       updatedAt: DateTime.now().toIso8601String(),
     );
 
-    Navigator.pop(context, task); // Kembalikan objek task ke Dashboard
+    Navigator.pop(context, task);
+  }
+
+  // Helper untuk styling TextField agar konsisten
+  InputDecoration _buildInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: Colors.teal),
+      labelStyle: const TextStyle(color: Colors.teal),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.teal, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(widget.task == null ? 'Tambah Task Baru' : 'Edit Task'),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+      title: Row(
+        children: [
+          Icon(
+            widget.task == null ? Icons.add_task : Icons.edit_note,
+            color: Colors.teal,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            widget.task == null ? 'Tambah Task' : 'Edit Task',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(height: 10),
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Judul Task *',
-                border: OutlineInputBorder(),
-              ),
+              decoration: _buildInputDecoration('Judul Task *', Icons.title),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _descController,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Deskripsi (opsional)',
-                border: OutlineInputBorder(),
-              ),
+              decoration: _buildInputDecoration('Deskripsi', Icons.description),
             ),
             const SizedBox(height: 16),
-            ListTile(
-              title: Text(
-                _dueDate == null
-                    ? 'Pilih Due Date'
-                    : DateFormat('dd MMMM yyyy').format(_dueDate!),
-              ),
-              trailing: const Icon(Icons.calendar_today),
+            // Tombol Tanggal yang lebih menarik
+            InkWell(
               onTap: _pickDate,
+              borderRadius: BorderRadius.circular(15),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.grey.shade300),
+                  color: Colors.grey.shade50,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_month, color: Colors.teal),
+                    const SizedBox(width: 12),
+                    Text(
+                      _dueDate == null
+                          ? 'Pilih Tanggal Selesai'
+                          : DateFormat('dd MMMM yyyy').format(_dueDate!),
+                      style: TextStyle(
+                        color: _dueDate == null
+                            ? Colors.grey.shade600
+                            : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -102,10 +163,11 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
                   .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                   .toList(),
               onChanged: (v) => setState(() => _priority = v!),
-              decoration: const InputDecoration(
-                labelText: 'Prioritas',
-                border: OutlineInputBorder(),
+              decoration: _buildInputDecoration(
+                'Prioritas',
+                Icons.low_priority,
               ),
+              borderRadius: BorderRadius.circular(15),
             ),
           ],
         ),
@@ -113,9 +175,20 @@ class _AddEditTaskDialogState extends State<AddEditTaskDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Batal'),
+          child: const Text('Batal', style: TextStyle(color: Colors.grey)),
         ),
-        ElevatedButton(onPressed: _save, child: const Text('Simpan')),
+        ElevatedButton(
+          onPressed: _save,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          ),
+          child: const Text('Simpan Task'),
+        ),
       ],
     );
   }

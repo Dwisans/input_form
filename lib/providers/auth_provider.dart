@@ -44,7 +44,11 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    // JANGAN gunakan prefs.clear() karena akan menghapus semua Task/Tugas
+    await prefs.remove('is_logged_in');
+    await prefs.remove('username');
+    // profile_pic boleh dihapus atau dibiarkan
+
     _isLoggedIn = false;
     notifyListeners();
   }

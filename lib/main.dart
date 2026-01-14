@@ -4,6 +4,9 @@ import 'providers/auth_provider.dart';
 import 'screens/splash/welcome_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 
+// Buat key global di luar class
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
@@ -21,15 +24,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     return MaterialApp(
+      navigatorKey: navigatorKey, // PASANG KEY DI SINI
       debugShowCheckedModeBanner: false,
-      title: 'TodoFlow',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.teal,
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-      ),
-      // Jika sudah login langsung ke Dashboard, jika belum ke Welcome
       home: auth.isLoggedIn ? const DashboardScreen() : const WelcomeScreen(),
+      routes: {
+        '/login': (context) => const WelcomeScreen(),
+        '/dashboard': (context) => const DashboardScreen(),
+      },
     );
   }
 }
